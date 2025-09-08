@@ -131,8 +131,8 @@ class ActivityLogFragment : Fragment() {
     }
 
     private fun retryForwarding(smsLogEntry: SmsLogEntry) {
-        if (smsLogEntry.status != ForwardingStatus.FAILED) {
-            Toast.makeText(requireContext(), "Can only retry failed messages", Toast.LENGTH_SHORT).show()
+        if (smsLogEntry.status != ForwardingStatus.FAILED && smsLogEntry.status != ForwardingStatus.SUCCESS) {
+            Toast.makeText(requireContext(), "Can only retry failed messages or resend successful ones", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -160,7 +160,12 @@ class ActivityLogFragment : Fragment() {
         val updatedEntry = smsLogEntry.copy(status = ForwardingStatus.RETRYING)
         smsLogAdapter.updateEntry(updatedEntry)
         
-        Toast.makeText(requireContext(), "Retrying Zeus SMS forwarding...", Toast.LENGTH_SHORT).show()
+        val actionMessage = when (smsLogEntry.status) {
+            ForwardingStatus.SUCCESS -> "Resending Zeus SMS..."
+            ForwardingStatus.FAILED -> "Retrying Zeus SMS forwarding..."
+            else -> "Processing Zeus SMS..."
+        }
+        Toast.makeText(requireContext(), actionMessage, Toast.LENGTH_SHORT).show()
         
         // LiveData will automatically update the UI when status changes
     }
@@ -193,16 +198,27 @@ class ActivityLogFragment : Fragment() {
             appendLine("\"${smsLogEntry.message}\"")
         }
 
-        AlertDialog.Builder(requireContext())
+        val retryButtonText = when (smsLogEntry.status) {
+            ForwardingStatus.SUCCESS -> "Resend"
+            ForwardingStatus.FAILED -> "Retry"
+            else -> "Retry"
+        }
+        
+        val canRetryResend = smsLogEntry.status == ForwardingStatus.FAILED || 
+                           smsLogEntry.status == ForwardingStatus.SUCCESS
+        
+        val dialog = AlertDialog.Builder(requireContext())
             .setTitle("Zeus SMS Details")
             .setMessage(details)
             .setPositiveButton("OK", null)
-            .setNeutralButton("Retry") { _, _ ->
-                if (smsLogEntry.status == ForwardingStatus.FAILED) {
-                    retryForwarding(smsLogEntry)
-                }
+        
+        if (canRetryResend) {
+            dialog.setNeutralButton(retryButtonText) { _, _ ->
+                retryForwarding(smsLogEntry)
             }
-            .show()
+        }
+        
+        dialog.show()
     }
 
     private fun showClearLogConfirmation() {

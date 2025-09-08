@@ -87,19 +87,30 @@ class SmsLogAdapter(
                 textErrorMessage.visibility = View.GONE
             }
 
-            // Action buttons
+            // Action buttons - show for all messages (successful, failed, or with retries)
             val showActions = smsLogEntry.status == ForwardingStatus.FAILED || 
+                            smsLogEntry.status == ForwardingStatus.SUCCESS ||
                             smsLogEntry.retryCount > 0 || 
                             !smsLogEntry.errorMessage.isNullOrEmpty()
             
             if (showActions) {
                 layoutActions.visibility = View.VISIBLE
                 
-                // Retry button
-                buttonRetry.isEnabled = smsLogEntry.status == ForwardingStatus.FAILED
-                buttonRetry.alpha = if (buttonRetry.isEnabled) 1.0f else 0.6f
+                // Retry button - now enabled for both failed and successful messages
+                val canRetry = smsLogEntry.status == ForwardingStatus.FAILED || 
+                              smsLogEntry.status == ForwardingStatus.SUCCESS
+                buttonRetry.isEnabled = canRetry
+                buttonRetry.alpha = if (canRetry) 1.0f else 0.6f
+                
+                // Update retry button text based on status
+                buttonRetry.text = when (smsLogEntry.status) {
+                    ForwardingStatus.SUCCESS -> "Resend"
+                    ForwardingStatus.FAILED -> "Retry"
+                    else -> "Retry"
+                }
+                
                 buttonRetry.setOnClickListener { 
-                    if (smsLogEntry.status == ForwardingStatus.FAILED) {
+                    if (canRetry) {
                         onRetryClick(smsLogEntry) 
                     }
                 }
