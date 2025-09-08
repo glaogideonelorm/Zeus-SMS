@@ -38,6 +38,16 @@
             </intent-filter>
         </receiver>
 
+        <!-- Battery events receiver -->
+        <receiver
+            android:name=".sms.BatteryEventReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BATTERY_LOW"/>
+                <action android:name="android.intent.action.BATTERY_OKAY"/>
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

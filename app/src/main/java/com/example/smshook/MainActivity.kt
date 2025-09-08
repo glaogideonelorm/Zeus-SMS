@@ -12,6 +12,11 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.example.smshook.data.SmsLogManager
 import com.example.smshook.utils.WorkManagerObserver
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import java.util.concurrent.TimeUnit
+import com.example.smshook.sms.BatteryMonitorWorker
 
 class MainActivity : AppCompatActivity() {
 
@@ -23,6 +28,7 @@ class MainActivity : AppCompatActivity() {
 
         setupBottomNavigation()
         setupWorkManagerObserver()
+        scheduleBatteryMonitor()
         checkAndRequestPermissions()
     }
 
@@ -38,6 +44,19 @@ class MainActivity : AppCompatActivity() {
         val smsLogManager = SmsLogManager.getInstance(this)
         val workManagerObserver = WorkManagerObserver(this, smsLogManager)
         workManagerObserver.observeWorkCompletion(this)
+    }
+
+    private fun scheduleBatteryMonitor() {
+        val work = PeriodicWorkRequestBuilder<BatteryMonitorWorker>(
+            15, TimeUnit.MINUTES
+        )
+            .addTag("zeus-battery-monitor")
+            .build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "zeus-battery-monitor",
+            ExistingPeriodicWorkPolicy.UPDATE,
+            work
+        )
     }
 
     private fun checkAndRequestPermissions() {
