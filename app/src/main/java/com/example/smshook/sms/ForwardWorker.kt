@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import okhttp3.MediaType.Companion.toMediaType
+import android.util.Log
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -31,6 +32,7 @@ class ForwardWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params
         .build()
 
     override fun doWork(): Result {
+        Log.d("ZeusSMS", "ForwardWorker started (runAttemptCount=$runAttemptCount)")
         val from = inputData.getString("from") ?: return Result.failure()
         val body = inputData.getString("body") ?: return Result.failure()
         val timestamp = inputData.getLong("timestamp", System.currentTimeMillis())
@@ -76,7 +78,9 @@ class ForwardWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params
             .build()
 
         return try {
+            Log.d("ZeusSMS", "POSTing to $finalUrl bodyLength=${payload.length}")
             client.newCall(req).execute().use { resp ->
+                Log.d("ZeusSMS", "Response code=${resp.code} success=${resp.isSuccessful}")
                 when {
                     resp.isSuccessful -> {
                         // Success - update log
@@ -86,18 +90,21 @@ class ForwardWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params
                     resp.code in 400..499 -> {
                         // Client error - don't retry
                         val errorMsg = "HTTP ${resp.code}: ${resp.message}"
+                        Log.w("ZeusSMS", "Client error: $errorMsg")
                         smsLogManager.updateSmsStatus(logId, ForwardingStatus.FAILED, errorMsg)
                         Result.failure()
                     }
                     runAttemptCount < 6 -> {
                         // Server error - retry
                         val errorMsg = "HTTP ${resp.code}: ${resp.message} (attempt ${runAttemptCount + 1})"
+                        Log.w("ZeusSMS", "Server error (will retry): $errorMsg")
                         smsLogManager.updateSmsStatus(logId, ForwardingStatus.RETRYING, errorMsg)
                         Result.retry()
                     }
                     else -> {
                         // Max retries reached
                         val errorMsg = "Max retries reached. Last error: HTTP ${resp.code}: ${resp.message}"
+                        Log.e("ZeusSMS", errorMsg)
                         smsLogManager.updateSmsStatus(logId, ForwardingStatus.FAILED, errorMsg)
                         Result.failure()
                     }
@@ -106,6 +113,7 @@ class ForwardWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params
         } catch (e: Exception) {
             // Network error
             val errorMsg = "Network error: ${e.message}"
+            Log.e("ZeusSMS", errorMsg, e)
             if (runAttemptCount < 6) {
                 smsLogManager.updateSmsStatus(logId, ForwardingStatus.RETRYING, "$errorMsg (attempt ${runAttemptCount + 1})")
                 Result.retry()

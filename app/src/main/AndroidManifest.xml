@@ -38,13 +38,12 @@
             </intent-filter>
         </receiver>
 
-        <!-- Battery events receiver -->
+        <!-- Test-only message sender to webhook using the SMS pipeline -->
         <receiver
-            android:name=".sms.BatteryEventReceiver"
+            android:name=".sms.TestMessageReceiver"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.BATTERY_LOW"/>
-                <action android:name="android.intent.action.BATTERY_OKAY"/>
+                <action android:name="com.example.smshook.ACTION_TEST_SEND_MESSAGE"/>
             </intent-filter>
         </receiver>
 
