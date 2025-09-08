@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Zeus SMS</string>
+    <string name="title_configuration">Configuration</string>
+    <string name="title_activity_log">Activity Log</string>
+    <string name="zeus_server_connection">Zeus Server Connection</string>
+    <string name="microservice_status">Zeus SMS Microservice</string>
+</resources>
