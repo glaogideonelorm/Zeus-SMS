@@ -7,9 +7,15 @@
 
     <application
         android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:label="Zeus SMS"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat">
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:theme="@style/Theme.AppCompat"
+        android:usesCleartextTraffic="false"
+        android:networkSecurityConfig="@xml/network_security_config">
 
         <activity
             android:name=".MainActivity"
@@ -41,7 +47,8 @@
         <!-- Test-only message sender to webhook using the SMS pipeline -->
         <receiver
             android:name=".sms.TestMessageReceiver"
-            android:exported="true">
+            android:exported="false"
+            android:permission="android.permission.SEND_SMS">
             <intent-filter>
                 <action android:name="com.example.smshook.ACTION_TEST_SEND_MESSAGE"/>
             </intent-filter>
