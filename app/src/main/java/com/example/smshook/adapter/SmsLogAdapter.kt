@@ -13,6 +13,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.smshook.R
 import com.example.smshook.data.ForwardingStatus
 import com.example.smshook.data.SmsLogEntry
+import android.util.Log
+import java.lang.ref.WeakReference
 
 class SmsLogAdapter(
     private val smsLogList: MutableList<SmsLogEntry>,
@@ -33,27 +35,32 @@ class SmsLogAdapter(
     override fun getItemCount(): Int = smsLogList.size
 
     fun updateData(newList: List<SmsLogEntry>) {
-        val diffCallback = SmsLogDiffCallback(smsLogList.toList(), newList)
-        val diffResult = DiffUtil.calculateDiff(diffCallback)
-        
-        smsLogList.clear()
-        smsLogList.addAll(newList)
-        diffResult.dispatchUpdatesTo(this)
+        try {
+            val oldList = smsLogList.toList()
+            val diffCallback = SmsLogDiffCallback(oldList, newList)
+            val diffResult = DiffUtil.calculateDiff(diffCallback)
+            
+            smsLogList.clear()
+            smsLogList.addAll(newList)
+            diffResult.dispatchUpdatesTo(this)
+        } catch (e: Exception) {
+            Log.e("SmsLogAdapter", "Error updating data", e)
+            // Fallback to simple update
+            smsLogList.clear()
+            smsLogList.addAll(newList)
+            notifyDataSetChanged()
+        }
     }
 
     fun updateEntry(updatedEntry: SmsLogEntry) {
-        val index = smsLogList.indexOfFirst { it.id == updatedEntry.id }
-        if (index != -1) {
-            val oldEntry = smsLogList[index]
-            smsLogList[index] = updatedEntry
-            
-            // Use DiffUtil for single item update
-            val diffCallback = SmsLogDiffCallback(listOf(oldEntry), listOf(updatedEntry))
-            val diffResult = DiffUtil.calculateDiff(diffCallback)
-            
-            if (diffCallback.newListSize > 0) {
-                notifyItemChanged(index, diffCallback.getChangePayload(0, 0))
+        try {
+            val index = smsLogList.indexOfFirst { it.id == updatedEntry.id }
+            if (index != -1) {
+                smsLogList[index] = updatedEntry
+                notifyItemChanged(index)
             }
+        } catch (e: Exception) {
+            Log.e("SmsLogAdapter", "Error updating entry", e)
         }
     }
 
@@ -69,8 +76,8 @@ class SmsLogAdapter(
         private val buttonViewDetails: Button = itemView.findViewById(R.id.buttonViewDetails)
 
         fun bind(smsLogEntry: SmsLogEntry) {
-            // Basic info
-            textSender.text = if (smsLogEntry.isTest) "TEST" else smsLogEntry.sender
+            // Basic info with null safety
+            textSender.text = if (smsLogEntry.isTest) "TEST" else (smsLogEntry.sender.takeIf { it.isNotBlank() } ?: "Unknown")
             textMessage.text = smsLogEntry.getShortMessage()
             textTimestamp.text = smsLogEntry.getFormattedTimestamp()
             textSimInfo.text = smsLogEntry.getSimInfo()
@@ -79,9 +86,26 @@ class SmsLogAdapter(
             textStatus.text = smsLogEntry.status.displayName
             updateStatusBackground(textStatus, smsLogEntry.status)
 
-            // Error message handling
+            // Show last attempt summary if present
+            val lastCode = smsLogEntry.lastHttpStatus
+            val lastDur = smsLogEntry.lastDurationMs
+            val extra = when {
+                lastCode != null && lastDur != null -> " (HTTP $lastCode, ${lastDur}ms)"
+                lastCode != null -> " (HTTP $lastCode)"
+                lastDur != null -> " (${lastDur}ms)"
+                else -> ""
+            }
+            if (extra.isNotEmpty()) {
+                textStatus.text = smsLogEntry.status.displayName + extra
+            }
+
+            // Error message handling with length limit
             if (smsLogEntry.status == ForwardingStatus.FAILED && !smsLogEntry.errorMessage.isNullOrEmpty()) {
-                textErrorMessage.text = "Error: ${smsLogEntry.errorMessage}"
+                val errorText = smsLogEntry.errorMessage!!
+                val displayError = if (errorText.length > 100) {
+                    errorText.take(97) + "..."
+                } else errorText
+                textErrorMessage.text = "Error: $displayError"
                 textErrorMessage.visibility = View.VISIBLE
             } else {
                 textErrorMessage.visibility = View.GONE
@@ -109,14 +133,23 @@ class SmsLogAdapter(
                     else -> "Retry"
                 }
                 
+                // Use weak reference to prevent memory leaks
+                val weakEntryRetry = WeakReference(smsLogEntry)
                 buttonRetry.setOnClickListener { 
-                    if (canRetry) {
-                        onRetryClick(smsLogEntry) 
+                    val entry = weakEntryRetry.get()
+                    if (canRetry && entry != null) {
+                        onRetryClick(entry) 
                     }
                 }
                 
-                // Details button
-                buttonViewDetails.setOnClickListener { onDetailsClick(smsLogEntry) }
+                // Details button with weak reference
+                val weakEntryDetails = WeakReference(smsLogEntry)
+                buttonViewDetails.setOnClickListener { 
+                    val entry = weakEntryDetails.get()
+                    if (entry != null) {
+                        onDetailsClick(entry)
+                    }
+                }
             } else {
                 layoutActions.visibility = View.GONE
             }
@@ -144,5 +177,42 @@ class SmsLogAdapter(
             drawable.setColor(color)
             textView.background = drawable
         }
+    }
+}
+
+class SmsLogDiffCallback(
+    private val oldList: List<SmsLogEntry>,
+    private val newList: List<SmsLogEntry>
+) : DiffUtil.Callback() {
+
+    override fun getOldListSize(): Int = oldList.size
+
+    override fun getNewListSize(): Int = newList.size
+
+    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        return oldList[oldItemPosition].id == newList[newItemPosition].id
+    }
+
+    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        val oldItem = oldList[oldItemPosition]
+        val newItem = newList[newItemPosition]
+        
+        return oldItem.status == newItem.status &&
+               oldItem.errorMessage == newItem.errorMessage &&
+               oldItem.retryCount == newItem.retryCount &&
+               oldItem.lastAttemptTime == newItem.lastAttemptTime
+    }
+
+    override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any? {
+        val oldItem = oldList[oldItemPosition]
+        val newItem = newList[newItemPosition]
+        
+        if (oldItem.status != newItem.status) {
+            return "status_change"
+        }
+        if (oldItem.errorMessage != newItem.errorMessage) {
+            return "error_change"
+        }
+        return null
     }
 }

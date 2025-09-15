@@ -12,11 +12,14 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.example.smshook.data.SmsLogManager
 import com.example.smshook.utils.WorkManagerObserver
+import android.widget.ImageView
+import coil.load
 import androidx.work.WorkManager
 
 class MainActivity : AppCompatActivity() {
 
     private val REQUEST_SMS_PERMISSION = 1001
+    private val LOGO_URL = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,6 +28,7 @@ class MainActivity : AppCompatActivity() {
         setupBottomNavigation()
         setupWorkManagerObserver()
         checkAndRequestPermissions()
+        loadLogo()
     }
 
     private fun setupBottomNavigation() {
@@ -39,6 +43,12 @@ class MainActivity : AppCompatActivity() {
         val smsLogManager = SmsLogManager.getInstance(this)
         val workManagerObserver = WorkManagerObserver(this, smsLogManager)
         workManagerObserver.observeWorkCompletion(this)
+    }
+
+    private fun loadLogo() {
+        val imageLogo: ImageView? = findViewById(R.id.imageLogo)
+        // Prefer local drawable if available; fall back to URL if provided
+        imageLogo?.setImageResource(R.drawable.zeus_logo)
     }
 
     // Battery monitor scheduling removed per request

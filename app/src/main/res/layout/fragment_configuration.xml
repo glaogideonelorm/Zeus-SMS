@@ -90,6 +90,14 @@
                     android:textColor="@android:color/white"
                     android:textStyle="bold" />
 
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switchForwarding"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Enable SMS Forwarding"
+                    android:checked="true"
+                    android:layout_marginTop="12dp" />
+
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 

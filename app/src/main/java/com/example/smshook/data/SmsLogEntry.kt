@@ -14,7 +14,10 @@ data class SmsLogEntry(
     var webhookUrl: String? = null,
     var retryCount: Int = 0,
     var lastAttemptTime: Long = timestamp,
-    val isTest: Boolean = false
+    val isTest: Boolean = false,
+    var attempts: MutableList<ForwardAttempt> = mutableListOf(),
+    var lastHttpStatus: Int? = null,
+    var lastDurationMs: Long? = null
 ) {
     fun getFormattedTimestamp(): String {
         val sdf = SimpleDateFormat("MMM dd, HH:mm:ss", Locale.getDefault())
@@ -48,3 +51,12 @@ enum class ForwardingStatus(val displayName: String, val colorRes: Int) {
     PENDING("Sending...", android.R.color.holo_orange_dark),
     RETRYING("Retrying...", android.R.color.holo_blue_dark)
 }
+
+data class ForwardAttempt(
+    val startedAt: Long,
+    var finishedAt: Long? = null,
+    var httpStatus: Int? = null,
+    var success: Boolean = false,
+    var errorSnippet: String? = null,
+    var durationMs: Long? = null
+)

@@ -19,6 +19,10 @@ class TestMessageReceiver : BroadcastReceiver() {
         val subId = intent.getIntExtra(EXTRA_SUB_ID, DEFAULT_SUB_ID)
 
         Log.d("ZeusSMS", "TestMessageReceiver enqueue ForwardWorker body='${body}' from='${from}'")
+        val constraints = androidx.work.Constraints.Builder()
+            .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
+            .build()
+
         val work = OneTimeWorkRequestBuilder<ForwardWorker>()
             .setInputData(
                 workDataOf(
@@ -26,9 +30,10 @@ class TestMessageReceiver : BroadcastReceiver() {
                     "body" to body,
                     "timestamp" to ts,
                     "subscriptionId" to subId,
-                    "isTest" to false
+                    "isTest" to true
                 )
             )
+            .setConstraints(constraints)
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
             .addTag("zeus-test-forward")
             .build()

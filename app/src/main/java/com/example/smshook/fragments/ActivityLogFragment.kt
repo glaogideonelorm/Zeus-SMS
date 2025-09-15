@@ -23,6 +23,11 @@ import com.example.smshook.data.SmsLogEntry
 import com.example.smshook.data.SmsLogManager
 import com.example.smshook.data.SmsLogStats
 import com.example.smshook.sms.ForwardWorker
+import androidx.work.BackoffPolicy
+import java.util.concurrent.TimeUnit
+import android.util.Log
+import kotlinx.coroutines.*
+import androidx.lifecycle.lifecycleScope
 
 class ActivityLogFragment : Fragment() {
 
@@ -30,6 +35,9 @@ class ActivityLogFragment : Fragment() {
     private lateinit var smsLogAdapter: SmsLogAdapter
     private lateinit var smsLogManager: SmsLogManager
     private lateinit var layoutEmptyState: LinearLayout
+    
+    private var refreshJob: Job? = null
+    private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     
     // Stats views
     private lateinit var textTotalSms: TextView
@@ -80,7 +88,7 @@ class ActivityLogFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         smsLogAdapter = SmsLogAdapter(
             mutableListOf(),
-            onRetryClick = { smsLogEntry -> retryForwarding(smsLogEntry) },
+            onRetryClick = { smsLogEntry -> retryOrResend(smsLogEntry) },
             onDetailsClick = { smsLogEntry -> showSmsDetails(smsLogEntry) }
         )
         recyclerView.adapter = smsLogAdapter
@@ -88,13 +96,34 @@ class ActivityLogFragment : Fragment() {
 
     private fun setupEventListeners() {
         buttonRefresh.setOnClickListener {
-            // Force refresh from data source
-            smsLogManager.getRecentSmsLogs() // This will trigger LiveData update
+            smsLogManager.refresh()
             Toast.makeText(requireContext(), "Zeus SMS log refreshed", Toast.LENGTH_SHORT).show()
         }
 
         buttonClearLog.setOnClickListener {
             showClearLogConfirmation()
+        }
+    }
+    
+    private fun performRefresh() {
+        // Cancel any ongoing refresh
+        refreshJob?.cancel()
+        
+        refreshJob = coroutineScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    // Force a refresh from data source
+                    smsLogManager.getRecentSmsLogs()
+                }
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(requireContext(), "Zeus SMS log refreshed", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Log.e("ActivityLogFragment", "Error refreshing log", e)
+                    Toast.makeText(requireContext(), "Failed to refresh log", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
@@ -130,44 +159,62 @@ class ActivityLogFragment : Fragment() {
         textPendingSms.text = "⏳ ${stats.pending}"
     }
 
+    private fun retryOrResend(smsLogEntry: SmsLogEntry) {
+        when (smsLogEntry.status) {
+            ForwardingStatus.FAILED -> retryForwarding(smsLogEntry)
+            ForwardingStatus.SUCCESS -> resendMessage(smsLogEntry)
+            else -> Toast.makeText(requireContext(), "Only failed or successful messages can be actioned", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun retryForwarding(smsLogEntry: SmsLogEntry) {
-        if (smsLogEntry.status != ForwardingStatus.FAILED && smsLogEntry.status != ForwardingStatus.SUCCESS) {
-            Toast.makeText(requireContext(), "Can only retry failed messages or resend successful ones", Toast.LENGTH_SHORT).show()
-            return
+        // Keep retry semantics: update existing entry to RETRYING
+        enqueueWorkForEntry(smsLogEntry, updateExisting = true)
+        Toast.makeText(requireContext(), "Retrying Zeus SMS forwarding...", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun resendMessage(smsLogEntry: SmsLogEntry) {
+        // Resend semantics: create a NEW log entry to preserve history
+        val newId = smsLogManager.addSmsEntry(
+            smsLogEntry.sender,
+            smsLogEntry.message,
+            System.currentTimeMillis(),
+            smsLogEntry.subscriptionId,
+            smsLogManager.getSmsLogById(smsLogEntry.id)?.webhookUrl,
+            smsLogEntry.isTest
+        )
+        val newEntry = smsLogManager.getSmsLogById(newId) ?: return
+        enqueueWorkForEntry(newEntry, updateExisting = true)
+        Toast.makeText(requireContext(), "Resending Zeus SMS...", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun enqueueWorkForEntry(entry: SmsLogEntry, updateExisting: Boolean) {
+        if (updateExisting) {
+            smsLogManager.updateSmsStatus(entry.id, ForwardingStatus.RETRYING)
         }
 
-        // Update status to retrying
-        smsLogManager.updateSmsStatus(smsLogEntry.id, ForwardingStatus.RETRYING)
-        
-        // Create retry work request
-        val retryWorkRequest = OneTimeWorkRequestBuilder<ForwardWorker>()
+        val constraints = androidx.work.Constraints.Builder()
+            .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
+            .build()
+
+        val work = OneTimeWorkRequestBuilder<ForwardWorker>()
             .setInputData(
                 workDataOf(
-                    "from" to smsLogEntry.sender,
-                    "body" to smsLogEntry.message,
-                    "timestamp" to smsLogEntry.timestamp,
-                    "subscriptionId" to smsLogEntry.subscriptionId,
-                    "isTest" to smsLogEntry.isTest,
-                    "logId" to smsLogEntry.id
+                    "from" to entry.sender,
+                    "body" to entry.message,
+                    "timestamp" to entry.timestamp,
+                    "subscriptionId" to entry.subscriptionId,
+                    "isTest" to entry.isTest,
+                    "logId" to entry.id
                 )
             )
+            .setConstraints(constraints)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
             .addTag("zeus-sms-forward")
             .build()
 
-        WorkManager.getInstance(requireContext()).enqueue(retryWorkRequest)
-        
-        // Update the entry in adapter
-        val updatedEntry = smsLogEntry.copy(status = ForwardingStatus.RETRYING)
-        smsLogAdapter.updateEntry(updatedEntry)
-        
-        val actionMessage = when (smsLogEntry.status) {
-            ForwardingStatus.SUCCESS -> "Resending Zeus SMS..."
-            ForwardingStatus.FAILED -> "Retrying Zeus SMS forwarding..."
-            else -> "Processing Zeus SMS..."
-        }
-        Toast.makeText(requireContext(), actionMessage, Toast.LENGTH_SHORT).show()
-        
-        // LiveData will automatically update the UI when status changes
+        val wm = WorkManager.getInstance(requireContext())
+        wm.enqueue(work)
     }
 
     private fun showSmsDetails(smsLogEntry: SmsLogEntry) {
@@ -184,7 +231,9 @@ class ActivityLogFragment : Fragment() {
                 appendLine("Last Attempt: ${smsLogEntry.getFormattedLastAttempt()}")
             }
             if (!smsLogEntry.webhookUrl.isNullOrEmpty()) {
-                appendLine("Zeus Server: ${smsLogEntry.webhookUrl}")
+                // Sanitize URL for display (remove secrets)
+                val sanitizedUrl = sanitizeUrlForDisplay(smsLogEntry.webhookUrl!!)
+                appendLine("Zeus Server: $sanitizedUrl")
             }
             if (smsLogEntry.isTest) {
                 appendLine("Type: Test Message")
@@ -195,7 +244,11 @@ class ActivityLogFragment : Fragment() {
             }
             appendLine()
             appendLine("Message:")
-            appendLine("\"${smsLogEntry.message}\"")
+            // Truncate very long messages for display
+            val displayMessage = if (smsLogEntry.message.length > 500) {
+                smsLogEntry.message.take(497) + "..."
+            } else smsLogEntry.message
+            appendLine("\"$displayMessage\"")
         }
 
         val retryButtonText = when (smsLogEntry.status) {
@@ -233,9 +286,25 @@ class ActivityLogFragment : Fragment() {
             .show()
     }
 
+    private fun sanitizeUrlForDisplay(url: String): String {
+        return try {
+            val uri = android.net.Uri.parse(url)
+            "${uri.scheme}://${uri.host}${uri.path}***"
+        } catch (e: Exception) {
+            "[URL display error]"
+        }
+    }
+    
     override fun onResume() {
         super.onResume()
         // LiveData will automatically update when fragment resumes
         // No manual refresh needed
+    }
+    
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // Cancel any ongoing operations
+        refreshJob?.cancel()
+        coroutineScope.cancel()
     }
 }
