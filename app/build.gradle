@@ -57,6 +57,9 @@ dependencies {
     
     // Fragment KTX
     implementation "androidx.fragment:fragment-ktx:1.6.2"
+
+    // Image loading (Coil) for CDN/app logo
+    implementation "io.coil-kt:coil:2.6.0"
     
     // LiveData and ViewModel
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.7.0"
