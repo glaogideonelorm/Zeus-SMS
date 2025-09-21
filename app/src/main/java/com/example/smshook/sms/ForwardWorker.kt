@@ -13,6 +13,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import android.telephony.SubscriptionManager
 import com.example.smshook.fragments.ConfigurationFragment
+import com.example.smshook.fragments.WebhookConfig
 import com.example.smshook.data.ForwardingStatus
 import com.example.smshook.data.SmsLogManager
 import java.util.concurrent.TimeUnit
@@ -61,38 +62,32 @@ class ForwardWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params
         val isTest = inputData.getBoolean("isTest", false)
         val existingLogId = inputData.getLong("logId", -1L)
 
-        // Get webhook URL from SharedPreferences with validation
-        val webhookUrl = (inputData.getString("overrideUrl")?.takeIf { it.isNotBlank() })
-            ?: ConfigurationFragment.getWebhookUrl(context)
-        if (webhookUrl.isNullOrEmpty()) {
-            // For new SMS without webhook URL, create a failed entry
+        // Get webhook URLs from SharedPreferences with validation
+        val webhookConfigs = if (inputData.getString("overrideUrl")?.takeIf { it.isNotBlank() } != null) {
+            // Single override URL (backward compatibility)
+            val overrideUrl = inputData.getString("overrideUrl")!!
+            listOf(WebhookConfig(
+                id = "override",
+                name = "Override URL",
+                url = overrideUrl,
+                secret = ConfigurationFragment.getWebhookSecret(context) ?: ""
+            ))
+        } else {
+            // Multiple webhook URLs
+            ConfigurationFragment.getEnabledWebhookConfigs(context)
+        }
+        
+        if (webhookConfigs.isEmpty()) {
+            // For new SMS without webhook URLs, create a failed entry
             if (existingLogId == -1L) {
                 val failedLogId = smsLogManager.addSmsEntry(from, body, timestamp, subId, null, isTest)
-                smsLogManager.updateSmsStatus(failedLogId, ForwardingStatus.FAILED, "No webhook URL configured")
+                smsLogManager.updateSmsStatus(failedLogId, ForwardingStatus.FAILED, "No webhook URLs configured")
             } else {
-                smsLogManager.updateSmsStatus(existingLogId, ForwardingStatus.FAILED, "No webhook URL configured")
+                smsLogManager.updateSmsStatus(existingLogId, ForwardingStatus.FAILED, "No webhook URLs configured")
             }
             return Result.failure()
         }
         
-        // Create or get existing log entry
-        val logId = if (existingLogId != -1L) {
-            // This is a retry, update existing entry
-            smsLogManager.updateSmsStatus(existingLogId, ForwardingStatus.RETRYING)
-            existingLogId
-        } else {
-            // New SMS, create log entry
-            smsLogManager.addSmsEntry(from, body, timestamp, subId, webhookUrl, isTest)
-        }
-
-        // Validate URL for security
-        if (!isSecureUrl(webhookUrl)) {
-            val errorMsg = "Invalid or potentially unsafe URL detected"
-            Log.e("ZeusSMS", errorMsg)
-            smsLogManager.updateSmsStatus(logId, ForwardingStatus.FAILED, errorMsg)
-            return Result.failure()
-        }
-
         // Fallback: try resolving active default SMS subscription if missing
         if (subId <= 0) {
             try {
@@ -103,106 +98,119 @@ class ForwardWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params
         // Compose payload to match other SMS forwarder format
         val payload = createWebhookPayload(from, body, timestamp, subId, isTest)
 
-        // Build request and move secret to header instead of query param
-        val secret = ConfigurationFragment.getWebhookSecret(context)
-        val media = "application/json; charset=utf-8".toMediaType()
-        val reqBuilder = Request.Builder()
-            .url(webhookUrl)
-            .post(payload.toRequestBody(media))
-            .addHeader("User-Agent", "Zeus-SMS-Microservice/1.0")
-            .addHeader("Content-Type", "application/json")
-        if (!secret.isNullOrEmpty()) {
-            reqBuilder.addHeader("X-Webhook-Secret", secret)
-        }
-        val req = reqBuilder.build()
+        // Try each webhook URL in priority order
+        var lastError: String? = null
+        var hasSuccess = false
+        
+        for (webhookConfig in webhookConfigs) {
+            val webhookUrl = webhookConfig.url
+            
+            // Validate URL for security
+            if (!isSecureUrl(webhookUrl)) {
+                val errorMsg = "Invalid or potentially unsafe URL detected: ${webhookConfig.name}"
+                Log.e("ZeusSMS", errorMsg)
+                lastError = errorMsg
+                continue
+            }
 
-        return try {
-            val attemptIndex = smsLogManager.recordAttemptStart(logId)
-            val startedAt = System.currentTimeMillis()
-            // Log without exposing the full URL (which may contain secrets)
-            val sanitizedUrl = sanitizeUrlForLogging(webhookUrl)
-            Log.d("ZeusSMS", "POSTing to $sanitizedUrl bodyLength=${payload.length}")
-            client.newCall(req).execute().use { resp ->
-                Log.d("ZeusSMS", "Response code=${resp.code} success=${resp.isSuccessful}")
-                when {
-                    resp.isSuccessful -> {
-                        // Success - update log
-                        smsLogManager.recordAttemptFinish(
-                            logId,
-                            attemptIndex,
-                            httpStatus = resp.code,
-                            success = true,
-                            errorSnippet = null,
-                            durationMs = System.currentTimeMillis() - startedAt
-                        )
-                        smsLogManager.updateSmsStatus(logId, ForwardingStatus.SUCCESS)
-                        Result.success()
-                    }
-                    resp.code in 400..499 -> {
-                        // Client error - don't retry
-                        val errorMsg = "HTTP ${resp.code}: ${resp.message}"
-                        Log.w("ZeusSMS", "Client error: $errorMsg")
-                        smsLogManager.recordAttemptFinish(
-                            logId,
-                            attemptIndex,
-                            httpStatus = resp.code,
-                            success = false,
-                            errorSnippet = errorMsg.take(200),
-                            durationMs = System.currentTimeMillis() - startedAt
-                        )
-                        smsLogManager.updateSmsStatus(logId, ForwardingStatus.FAILED, errorMsg)
-                        Result.failure()
-                    }
-                    runAttemptCount < ConfigurationFragment.getRetryMaxAttempts(context) -> {
-                        // Server error - rely on WorkManager backoff
-                        val errorMsg = "HTTP ${resp.code}: ${resp.message} (attempt ${runAttemptCount + 1})"
-                        Log.w("ZeusSMS", "Server error (will retry): $errorMsg")
-                        smsLogManager.recordAttemptFinish(
-                            logId,
-                            attemptIndex,
-                            httpStatus = resp.code,
-                            success = false,
-                            errorSnippet = errorMsg.take(200),
-                            durationMs = System.currentTimeMillis() - startedAt
-                        )
-                        smsLogManager.updateSmsStatus(logId, ForwardingStatus.RETRYING, errorMsg)
-                        Result.retry()
-                    }
-                    else -> {
-                        // Max retries reached
-                        val errorMsg = "Max retries reached. Last error: HTTP ${resp.code}: ${resp.message}"
-                        Log.e("ZeusSMS", errorMsg)
-                        smsLogManager.recordAttemptFinish(
-                            logId,
-                            attemptIndex,
-                            httpStatus = resp.code,
-                            success = false,
-                            errorSnippet = errorMsg.take(200),
-                            durationMs = System.currentTimeMillis() - startedAt
-                        )
-                        smsLogManager.updateSmsStatus(logId, ForwardingStatus.FAILED, errorMsg)
-                        Result.failure()
+            // Create or get existing log entry for this webhook
+            val logId = if (existingLogId == -1L) {
+                // New SMS, create log entry for this webhook
+                smsLogManager.addSmsEntry(from, body, timestamp, subId, webhookUrl, isTest)
+            } else {
+                existingLogId
+            }
+
+            // Build request with webhook-specific secret
+            val media = "application/json; charset=utf-8".toMediaType()
+            val reqBuilder = Request.Builder()
+                .url(webhookUrl)
+                .post(payload.toRequestBody(media))
+                .addHeader("User-Agent", "Zeus-SMS-Microservice/1.0")
+                .addHeader("Content-Type", "application/json")
+                .addHeader("X-Webhook-Name", webhookConfig.name)
+                .addHeader("X-Webhook-ID", webhookConfig.id)
+            
+            if (webhookConfig.secret.isNotEmpty()) {
+                reqBuilder.addHeader("X-Webhook-Secret", webhookConfig.secret)
+            }
+            
+            val req = reqBuilder.build()
+
+            try {
+                val attemptIndex = smsLogManager.recordAttemptStart(logId)
+                val startedAt = System.currentTimeMillis()
+                val sanitizedUrl = sanitizeUrlForLogging(webhookUrl)
+                Log.d("ZeusSMS", "POSTing to ${webhookConfig.name} ($sanitizedUrl) bodyLength=${payload.length}")
+                
+                client.newCall(req).execute().use { resp ->
+                    Log.d("ZeusSMS", "Response from ${webhookConfig.name}: code=${resp.code} success=${resp.isSuccessful}")
+                    
+                    when {
+                        resp.isSuccessful -> {
+                            // Success - update log
+                            smsLogManager.recordAttemptFinish(
+                                logId,
+                                attemptIndex,
+                                httpStatus = resp.code,
+                                success = true,
+                                errorSnippet = null,
+                                durationMs = System.currentTimeMillis() - startedAt
+                            )
+                            smsLogManager.updateSmsStatus(logId, ForwardingStatus.SUCCESS)
+                            hasSuccess = true
+                            Log.d("ZeusSMS", "Successfully sent to ${webhookConfig.name}")
+                        }
+                        resp.code in 400..499 -> {
+                            // Client error - don't retry this webhook
+                            val errorMsg = "HTTP ${resp.code}: ${resp.message}"
+                            Log.w("ZeusSMS", "Client error from ${webhookConfig.name}: $errorMsg")
+                            smsLogManager.recordAttemptFinish(
+                                logId,
+                                attemptIndex,
+                                httpStatus = resp.code,
+                                success = false,
+                                errorSnippet = errorMsg.take(200),
+                                durationMs = System.currentTimeMillis() - startedAt
+                            )
+                            smsLogManager.updateSmsStatus(logId, ForwardingStatus.FAILED, errorMsg)
+                            lastError = "Client error from ${webhookConfig.name}: $errorMsg"
+                        }
+                        else -> {
+                            // Server error - log but continue to next webhook
+                            val errorMsg = "HTTP ${resp.code}: ${resp.message}"
+                            Log.w("ZeusSMS", "Server error from ${webhookConfig.name}: $errorMsg")
+                            smsLogManager.recordAttemptFinish(
+                                logId,
+                                attemptIndex,
+                                httpStatus = resp.code,
+                                success = false,
+                                errorSnippet = errorMsg.take(200),
+                                durationMs = System.currentTimeMillis() - startedAt
+                            )
+                            smsLogManager.updateSmsStatus(logId, ForwardingStatus.RETRYING, errorMsg)
+                            lastError = "Server error from ${webhookConfig.name}: $errorMsg"
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                // Network error for this webhook
+                val errorMsg = "Network error from ${webhookConfig.name}: ${e.message}"
+                Log.e("ZeusSMS", errorMsg, e)
+                lastError = errorMsg
             }
-        } catch (e: Exception) {
-            // Network error
-            val errorMsg = "Network error: ${e.message}"
-            Log.e("ZeusSMS", errorMsg, e)
-            val attemptIndex = smsLogManager.recordAttemptStart(logId)
-            smsLogManager.recordAttemptFinish(
-                logId,
-                attemptIndex,
-                httpStatus = null,
-                success = false,
-                errorSnippet = errorMsg.take(200),
-                durationMs = null
-            )
+        }
+
+        // Return success if at least one webhook succeeded
+        return if (hasSuccess) {
+            Result.success()
+        } else {
+            // All webhooks failed
             if (runAttemptCount < ConfigurationFragment.getRetryMaxAttempts(context)) {
-                smsLogManager.updateSmsStatus(logId, ForwardingStatus.RETRYING, "$errorMsg (attempt ${runAttemptCount + 1})")
+                Log.w("ZeusSMS", "All webhooks failed, will retry. Last error: $lastError")
                 Result.retry()
             } else {
-                smsLogManager.updateSmsStatus(logId, ForwardingStatus.FAILED, "$errorMsg (max retries reached)")
+                Log.e("ZeusSMS", "All webhooks failed after max retries. Last error: $lastError")
                 Result.failure()
             }
         }

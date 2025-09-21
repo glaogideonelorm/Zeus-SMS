@@ -23,6 +23,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Use SMS UI with bottom navigation (Home + History/Logs)
         setContentView(R.layout.activity_main)
 
         setupBottomNavigation()

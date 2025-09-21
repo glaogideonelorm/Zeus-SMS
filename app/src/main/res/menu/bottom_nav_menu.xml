@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/navigation_configuration"
-        android:icon="@drawable/ic_configuration"
-        android:title="@string/title_configuration" />
+        android:id="@+id/nav_home"
+        android:icon="@drawable/ic_home"
+        android:title="Home" />
     <item
-        android:id="@+id/navigation_activity_log"
-        android:icon="@drawable/ic_activity_log"
-        android:title="@string/title_activity_log" />
+        android:id="@+id/nav_logs"
+        android:icon="@drawable/ic_logs"
+        android:title="Logs" />
+    <item
+        android:id="@+id/nav_config"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:title="Config" />
 </menu>

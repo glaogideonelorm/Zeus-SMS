@@ -4,6 +4,16 @@
     <uses-permission android:name="android.permission.RECEIVE_SMS"/>
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.CALL_PHONE"/>
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS"/>
+    <uses-permission android:name="android.permission.READ_SMS"/>
+    <uses-permission android:name="android.permission.SEND_SMS"/>
 
     <application
         android:allowBackup="false"
@@ -17,14 +27,27 @@
         android:usesCleartextTraffic="false"
         android:networkSecurityConfig="@xml/network_security_config">
 
+        <!-- Entry Activity (Chooser) -->
         <activity
-            android:name=".MainActivity"
+            android:name=".EntryActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Zeus SMS Activity -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+
+        <!-- Zeus USSD Activity -->
+        <activity
+            android:name=".ZeusUssdActivity"
+            android:exported="true"
+            android:launchMode="singleTop" />
+
 
         <activity
             android:name=".SmsLogActivity"
@@ -53,6 +76,28 @@
                 <action android:name="com.example.smshook.ACTION_TEST_SEND_MESSAGE"/>
             </intent-filter>
         </receiver>
+
+        <!-- Zeus USSD Accessibility Service (USSDCoreSample) -->
+        <service
+            android:name="com.yourpackage.simpleussd.ussd.UssdAccessibilityService"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
+        <!-- Zeus FCM Service -->
+        <service
+            android:name=".fcm.ZeusFcmService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
 
     </application>
 

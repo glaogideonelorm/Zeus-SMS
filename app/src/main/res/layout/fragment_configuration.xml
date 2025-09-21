@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Webhook Configuration Card -->
+        <!-- Multiple Webhook Configuration Card -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -24,35 +24,118 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/zeus_server_connection"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Multiple Webhook URLs"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/buttonAddWebhook"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:text="Add Webhook"
+                        android:textSize="12sp"
+                        android:backgroundTint="#4CAF50"
+                        android:textColor="@android:color/white"
+                        android:minHeight="0dp"
+                        android:paddingHorizontal="12dp" />
+
+                </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Configure your Zeus server endpoint for SMS forwarding"
+                    android:text="Configure multiple webhook endpoints for SMS forwarding. SMS will be sent to all enabled webhooks."
                     android:textSize="14sp"
                     android:textColor="#666"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- Webhook List -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerViewWebhooks"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:maxHeight="400dp"
+                    android:scrollbars="vertical" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switchForwarding"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Enable SMS Forwarding"
+                    android:checked="true"
+                    android:layout_marginTop="12dp" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Add/Edit Webhook Dialog Card (Initially Hidden) -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardAddWebhook"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:elevation="4dp"
+            android:radius="8dp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Add/Edit Webhook Configuration"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
                     android:layout_marginBottom="16dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Zeus Server URL:"
+                    android:text="Webhook Name:"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp" />
 
                 <EditText
-                    android:id="@+id/editTextUrl"
+                    android:id="@+id/editTextWebhookName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="https://zeus-server.com/api/sms/webhook"
+                    android:hint="e.g., Primary Server, Backup Server"
+                    android:inputType="text"
+                    android:padding="12dp"
+                    android:background="@drawable/edit_text_background"
+                    android:layout_marginBottom="8dp"
+                    android:textColor="#333333"
+                    android:textColorHint="#999999" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Webhook URL:"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <EditText
+                    android:id="@+id/editTextWebhookUrl"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="https://your-server.com/api/sms/webhook"
                     android:inputType="textUri"
                     android:minLines="2"
                     android:padding="12dp"
@@ -70,10 +153,10 @@
                     android:layout_marginBottom="8dp" />
 
                 <EditText
-                    android:id="@+id/editTextSecret"
+                    android:id="@+id/editTextWebhookSecret"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Your Zeus API secret key"
+                    android:hint="Your webhook API secret key"
                     android:inputType="textPassword"
                     android:padding="12dp"
                     android:background="@drawable/edit_text_background"
@@ -81,22 +164,147 @@
                     android:textColor="#333333"
                     android:textColorHint="#999999" />
 
-                <Button
-                    android:id="@+id/buttonSaveUrl"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Save Zeus Configuration"
-                    android:backgroundTint="#6200EA"
-                    android:textColor="@android:color/white"
-                    android:textStyle="bold" />
+                    android:orientation="horizontal">
 
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switchForwarding"
+                    <Button
+                        android:id="@+id/buttonSaveWebhook"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Save Webhook"
+                        android:backgroundTint="#6200EA"
+                        android:textColor="@android:color/white"
+                        android:textStyle="bold"
+                        android:layout_marginEnd="8dp" />
+
+                    <Button
+                        android:id="@+id/buttonCancelWebhook"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Cancel"
+                        android:backgroundTint="#757575"
+                        android:textColor="@android:color/white"
+                        android:layout_marginStart="8dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Server URL Configuration Card -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardServerConfig"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:elevation="4dp"
+            android:radius="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🌐 Server URL Configuration"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Configure your Zeus server base URL. All API endpoints will be automatically generated from this base URL."
+                    android:textSize="14sp"
+                    android:textColor="#666"
+                    android:layout_marginBottom="16dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Server Base URL:"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <EditText
+                    android:id="@+id/editTextServerBaseUrl"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Enable SMS Forwarding"
-                    android:checked="true"
-                    android:layout_marginTop="12dp" />
+                    android:hint="https://your-zeus-server.com"
+                    android:inputType="textUri"
+                    android:padding="12dp"
+                    android:background="@drawable/edit_text_background"
+                    android:layout_marginBottom="16dp"
+                    android:textColor="#333333"
+                    android:textColorHint="#999999" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+
+                    <Button
+                        android:id="@+id/buttonSaveServerUrl"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Save Server URL"
+                        android:backgroundTint="#4CAF50"
+                        android:textColor="@android:color/white"
+                        android:textStyle="bold"
+                        android:layout_marginEnd="4dp" />
+
+                    <Button
+                        android:id="@+id/buttonTestServerConnection"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Test Connection"
+                        android:backgroundTint="#2196F3"
+                        android:textColor="@android:color/white"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginEnd="4dp" />
+
+                    <Button
+                        android:id="@+id/buttonResetServerUrls"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Reset to Defaults"
+                        android:backgroundTint="#FF9800"
+                        android:textColor="@android:color/white"
+                        android:layout_marginStart="4dp" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Current Server URLs:"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/textCurrentServerUrls"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Loading current URLs..."
+                    android:textSize="12sp"
+                    android:textColor="#666"
+                    android:background="#F0F0F0"
+                    android:padding="12dp"
+                    android:fontFamily="monospace"
+                    android:lineSpacingExtra="2dp" />
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -257,3 +465,7 @@
     </LinearLayout>
 
 </ScrollView>
+
+
+
+
