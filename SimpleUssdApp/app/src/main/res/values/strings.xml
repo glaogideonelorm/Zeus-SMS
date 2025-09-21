@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Simple USSD</string>
+    <string name="permission_request">Permission Required</string>
+    <string name="grant_permission">Grant Permission</string>
+    <string name="enable_accessibility">Enable Accessibility Service</string>
+    <string name="accessibility_service_description">This service is required to automatically handle USSD responses and input options.</string>
+</resources>
+
