@@ -17,17 +17,17 @@ A comprehensive Android application that provides SMS forwarding and USSD automa
 
 - **Automated USSD Execution**: Execute USSD codes automatically via accessibility service
 - **Dual-SIM USSD Support**: Run USSD commands on both SIM slots
-- **Cloud Integration**: Receive USSD commands from Zeus Cloud via WebSocket
+- **Cloud Integration**: Receive USSD commands from cloud platform
 - **Real-time Execution**: Execute commands with live feedback and status updates
 - **Accessibility Service**: Automatic handling of USSD dialogs and responses
 - **Command History**: Track and log all USSD command executions
 
 ### Cloud Integration
 
-- **Zeus Cloud Connection**: Real-time WebSocket connection for command delivery
-- **Firebase Cloud Messaging**: Push notification support for remote commands
-- **JWT Authentication**: Secure token-based authentication with cloud services
-- **Realtime Communication**: Bidirectional communication with Zeus Cloud platform
+- **Cloud Connection**: Real-time connection for command delivery
+- **Push Notifications**: Remote command support via messaging
+- **Secure Authentication**: Token-based authentication with cloud services
+- **Realtime Communication**: Bidirectional communication with cloud platform
 - **Auto-reconnection**: Automatic reconnection on network changes
 - **Token Management**: Dynamic token refresh and validation
 
@@ -91,63 +91,6 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - **USSD Logs**: Monitor USSD command execution history and results
 - **Connection Status**: Check cloud connectivity and service status
 
-## Data Formats
-
-### SMS Webhook Format
-
-Messages are sent as POST requests:
-
-```json
-{
-  "RCSMessage": {
-    "msgId": "zeus_1757325681000_a1b2c3d4",
-    "textMessage": "SMS content here",
-    "timestamp": "2025-01-08T10:01:21.000Z"
-  },
-  "messageContact": {
-    "userContact": "+1234567890"
-  },
-  "event": "message"
-}
-```
-
-### USSD Command Format (Zeus Cloud)
-
-Commands received from Zeus Cloud:
-
-```json
-{
-  "id": "msg_123",
-  "type": "data",
-  "body": {
-    "commandName": "Mini statement check",
-    "networkOperator": "MTN",
-    "code": "*171#",
-    "options": ["7", "4", "1", "2040"],
-    "commandId": "cmd_456"
-  }
-}
-```
-
-### USSD Response Format
-
-Results sent back to Zeus Cloud:
-
-```json
-{
-  "type": "ussd_result",
-  "body": {
-    "commandId": "cmd_456",
-    "commandName": "Mini statement check",
-    "networkOperator": "MTN",
-    "simSlot": 1,
-    "success": true,
-    "result": "Your account balance is ₦5,250...",
-    "executionTimeMs": 15430
-  }
-}
-```
-
 ## Development
 
 ### Requirements
@@ -171,16 +114,16 @@ cd Zeus-SMS
 Zeus-SMS/
 ├── app/                                    # Main application module
 │   ├── src/main/java/com/example/smshook/
-│   │   ├── fragments/                      # UI components (Home, Configuration, Logs)
+│   │   ├── fragments/                      # UI components
 │   │   ├── sms/                           # SMS handling and forwarding
 │   │   ├── ussd/                          # USSD automation and execution
-│   │   ├── api/                           # Cloud API integration (ZeusApi)
+│   │   ├── api/                           # Cloud API integration
 │   │   ├── config/                        # Server configuration management
 │   │   ├── fcm/                           # Firebase Cloud Messaging
 │   │   ├── logs/                          # Logging system
 │   │   ├── realtime/                      # WebSocket and realtime communication
 │   │   ├── work/                          # Background work processing
-│   │   ├── adapters/                      # RecyclerView adapters
+│   │   ├── adapters/                      # UI adapters
 │   │   └── EntryActivity.kt               # Application entry point
 │   └── res/                               # Resources, layouts, and configurations
 ├── simpleussdlib/                         # Standalone USSD library module
@@ -188,27 +131,6 @@ Zeus-SMS/
 ├── USSDCoreSample/                        # USSD core engine for integration
 └── Documentation/                         # Guides and documentation
 ```
-
-### Key Components
-
-#### SMS Management
-
-- **SmsReceiver**: Captures incoming SMS messages
-- **ForwardWorker**: Handles webhook delivery with retry logic
-- **ConfigurationFragment**: Manages webhook URLs and settings
-
-#### USSD Automation
-
-- **UssdController**: Manages USSD code execution
-- **UssdAccessibilityService**: Handles USSD dialog automation
-- **ZeusUssdActivity**: Main USSD interface with navigation
-
-#### Cloud Integration
-
-- **ZeusApi**: REST API client for cloud communication
-- **RealtimeService**: WebSocket connection to Zeus Cloud
-- **ZeusFcmService**: Firebase Cloud Messaging integration
-- **ServerConfig**: Dynamic server configuration management
 
 ## Troubleshooting
 
@@ -248,20 +170,20 @@ Zeus-SMS/
 
 ### Cloud Connection Issues
 
-**Zeus Cloud not connecting?**
+**Cloud service not connecting?**
 
 - Check internet connectivity
-- Verify server URLs in configuration
-- Ensure Zeus Cloud server is deployed and running
-- Check JWT token authentication
+- Verify server configuration
+- Ensure cloud server is deployed and running
+- Check authentication settings
 - Review connection status in the app
 
-**WebSocket connection failing?**
+**Real-time connection failing?**
 
-- Verify WebSocket URL format (wss:// or ws://)
+- Verify connection URL format
 - Check firewall and proxy settings
-- Ensure server supports WebSocket connections
-- Review realtime service logs
+- Ensure server supports real-time connections
+- Review service logs
 
 ### General Issues
 
