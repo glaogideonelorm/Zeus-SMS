@@ -1,0 +1,53 @@
+Zeus USSD FCM & USSD Logs
+Generated: 2025-09-18 16:27:04
+==================================================
+
+16:22:42.918 [INFO] EntryActivity: Zeus app launched
+16:22:44.499 [API] ZeusFcmService: Token registered (ensure)
+  Details: HTTP 200
+16:23:17.618 [INFO] UssdHomeFragment: Device info loaded
+  Details: Device ID: 371f8e10-7c4f-43cb-b2a1-f3fa553bd9af
+16:23:17.625 [INFO] UssdHomeFragment: SIM slot selected
+  Details: 0
+16:23:17.627 [INFO] UssdHomeFragment: USSD home fragment created
+16:23:17.888 [FCM] UssdHomeFragment: FCM token received
+  Details: Token: c5TgFrAIQKSmRrq9qlQ5...
+16:25:38.965 [INFO] EntryActivity: Zeus app launched
+16:25:40.117 [API] ZeusFcmService: Token registered (ensure)
+  Details: HTTP 200
+16:25:40.581 [INFO] UssdHomeFragment: Device info loaded
+  Details: Device ID: 371f8e10-7c4f-43cb-b2a1-f3fa553bd9af
+16:25:40.586 [INFO] UssdHomeFragment: SIM slot selected
+  Details: 0
+16:25:40.588 [INFO] UssdHomeFragment: USSD home fragment created
+16:25:40.770 [FCM] UssdHomeFragment: FCM token received
+  Details: Token: c5TgFrAIQKSmRrq9qlQ5...
+16:25:42.788 [INFO] UssdLogsFragment: USSD logs fragment created
+16:25:47.978 [INFO] UssdHomeFragment: Device info loaded
+  Details: Device ID: 371f8e10-7c4f-43cb-b2a1-f3fa553bd9af
+16:25:47.982 [INFO] UssdHomeFragment: SIM slot selected
+  Details: 0
+16:25:47.984 [INFO] UssdHomeFragment: USSD home fragment created
+16:25:48.041 [FCM] UssdHomeFragment: FCM token received
+  Details: Token: c5TgFrAIQKSmRrq9qlQ5...
+16:25:48.492 [INFO] UssdLogsFragment: USSD logs fragment created
+16:26:49.107 [FCM] ZeusFcmService: FCM message received
+  Details: Data: {action=run, kind=ussd, jobId=job-20250918-002}
+16:26:49.109 [FCM] ZeusFcmService: USSD job requested
+  Details: Job ID: job-20250918-002
+16:26:49.130 [FCM] ZeusFcmService: USSD job enqueued
+  Details: job-20250918-002
+16:26:49.363 [USSD] RunJobWorker: Starting USSD job
+  Details: Job ID: job-20250918-002
+16:26:49.410 [API] ZeusApi: Fetching job details
+  Details: Job ID: job-20250918-002
+16:26:50.455 [API] ZeusApi: Job details fetched
+  Details: Operator: MTN, SIM: 1, Code: *171#, Steps: [7, 4, 1, 2040], Seq: *171# > 7 > 4 > 1 > 2040
+16:26:50.458 [USSD] RunJobWorker: Job details received
+  Details: Sequence: *171# > 7 > 4 > 1 > 2040
+16:26:50.489 [USSD] RunJobWorker: USSD execution completed
+  Details: Success: false, Response: Error: getCallCapablePhoneAccounts: Neither user 1...
+16:26:50.834 [API] ZeusApi: Job completed successfully
+  Details: Job ID: job-20250918-002
+16:26:50.837 [USSD] RunJobWorker: Job completed successfully
+  Details: Job ID: job-20250918-002

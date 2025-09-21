@@ -1,0 +1,50 @@
+Zeus USSD FCM & USSD Logs
+Generated: 2025-09-21 10:02:46
+==================================================
+
+10:02:29.131 [INFO] UssdLogsFragment: Logs cleared by user
+10:02:30.473 [INFO] UssdHomeFragment: Device info loaded
+  Details: Device ID: 150d105d-937c-4113-9728-a2103f6f4d16
+10:02:30.485 [INFO] UssdHomeFragment: SIM slots detected
+  Details: Slot 0: MTN, Slot 1: vodafone GH
+10:02:30.487 [INFO] UssdHomeFragment: SIM slot selected
+  Details: 0
+10:02:30.488 [INFO] UssdHomeFragment: USSD home fragment created
+10:02:30.548 [FCM] UssdHomeFragment: FCM token received
+  Details: Token: cqV-rDJyRTySPPqdmgJG...
+10:02:30.557 [ERROR] ZeusApi: Failed to register FCM token
+10:02:30.559 [FCM] UssdHomeFragment: FCM token registered successfully
+  Details: Device: 150d105d-937c-4113-9728-a2103f6f4d16
+10:02:30.560 [INFO] UssdHomeFragment: FCM token success - triggering SIM slot registration
+10:02:30.562 [INFO] UssdHomeFragment: Starting automatic SIM slot registration
+10:02:31.988 [API] ZeusApi: SIM slots registered successfully
+  Details: Device: 150d105d-937c-4113-9728-a2103f6f4d16, Slots: 2
+10:02:34.024 [API] ZeusApi: SIM slots registered successfully
+  Details: Device: 150d105d-937c-4113-9728-a2103f6f4d16, Slots: 2
+10:02:34.026 [INFO] UssdHomeFragment: SIM slots registered successfully after FCM token
+10:02:34.528 [INFO] HomeFragment: Device info loaded
+  Details: Device ID: 150d105d-937c-4113-9728-a2103f6f4d16
+10:02:34.529 [INFO] HomeFragment: Home fragment created
+10:02:34.586 [FCM] HomeFragment: FCM token received
+  Details: Token: cqV-rDJyRTySPPqdmgJG...
+10:02:36.185 [INFO] HomeFragment: Zeus USSD button clicked
+10:02:36.314 [INFO] UssdHomeFragment: Device info loaded
+  Details: Device ID: 150d105d-937c-4113-9728-a2103f6f4d16
+10:02:36.324 [INFO] UssdHomeFragment: SIM slots detected
+  Details: Slot 0: MTN, Slot 1: vodafone GH
+10:02:36.326 [INFO] UssdHomeFragment: SIM slot selected
+  Details: 0
+10:02:36.327 [INFO] UssdHomeFragment: USSD home fragment created
+10:02:36.492 [FCM] UssdHomeFragment: FCM token received
+  Details: Token: cqV-rDJyRTySPPqdmgJG...
+10:02:36.501 [ERROR] ZeusApi: Failed to register FCM token
+10:02:36.503 [FCM] UssdHomeFragment: FCM token registered successfully
+  Details: Device: 150d105d-937c-4113-9728-a2103f6f4d16
+10:02:36.504 [INFO] UssdHomeFragment: FCM token success - triggering SIM slot registration
+10:02:36.506 [INFO] UssdHomeFragment: Starting automatic SIM slot registration
+10:02:37.591 [API] ZeusApi: SIM slots registered successfully
+  Details: Device: 150d105d-937c-4113-9728-a2103f6f4d16, Slots: 2
+10:02:37.756 [API] ZeusApi: SIM slots registered successfully
+  Details: Device: 150d105d-937c-4113-9728-a2103f6f4d16, Slots: 2
+10:02:37.759 [INFO] UssdHomeFragment: SIM slots registered successfully after FCM token
+10:02:38.860 [INFO] UssdLogsFragment: USSD logs fragment created

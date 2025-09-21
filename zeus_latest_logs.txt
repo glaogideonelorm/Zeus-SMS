@@ -1,0 +1,166 @@
+Zeus USSD FCM & USSD Logs
+Generated: 2025-09-20 14:25:22
+==================================================
+
+14:17:01.007 [INFO] HomeFragment: Device info loaded
+  Details: Device ID: 150d105d-937c-4113-9728-a2103f6f4d16
+14:17:01.016 [INFO] HomeFragment: Home fragment created
+14:17:01.100 [FCM] HomeFragment: FCM token received
+  Details: Token: cqV-rDJyRTySPPqdmgJG...
+14:17:03.316 [INFO] HomeFragment: Zeus SMS button clicked
+14:17:03.429 [INFO] LogsFragment: Logs fragment created
+14:21:59.269 [INFO] HomeFragment: Device info loaded
+  Details: Device ID: 150d105d-937c-4113-9728-a2103f6f4d16
+14:21:59.271 [INFO] HomeFragment: Home fragment created
+14:21:59.317 [FCM] HomeFragment: FCM token received
+  Details: Token: cqV-rDJyRTySPPqdmgJG...
+14:22:00.367 [INFO] HomeFragment: Zeus USSD button clicked
+14:22:00.536 [INFO] UssdHomeFragment: Device info loaded
+  Details: Device ID: 150d105d-937c-4113-9728-a2103f6f4d16
+14:22:00.547 [INFO] UssdHomeFragment: SIM slots detected
+  Details: Slot 0: MTN, Slot 1: vodafone GH
+14:22:00.549 [INFO] UssdHomeFragment: SIM slot selected
+  Details: 0
+14:22:00.550 [INFO] UssdHomeFragment: USSD home fragment created
+14:22:00.715 [FCM] UssdHomeFragment: FCM token received
+  Details: Token: cqV-rDJyRTySPPqdmgJG...
+14:22:02.392 [API] ZeusApi: SIM slots registered successfully
+  Details: Device: 150d105d-937c-4113-9728-a2103f6f4d16, Slots: 2
+14:22:02.396 [FCM] UssdHomeFragment: FCM token registered successfully
+  Details: HTTP 200
+14:22:02.398 [INFO] UssdHomeFragment: FCM token success - triggering SIM slot registration
+14:22:02.400 [INFO] UssdHomeFragment: Starting automatic SIM slot registration
+14:22:02.809 [API] ZeusApi: SIM slots registered successfully
+  Details: Device: 150d105d-937c-4113-9728-a2103f6f4d16, Slots: 2
+14:22:02.812 [INFO] UssdHomeFragment: SIM slots registered successfully after FCM token
+14:22:21.542 [FCM] ZeusFcmService: FCM message received
+  Details: Data: {action=run, kind=ussd, jobId=mtn_mini_statement_1758378136585}
+14:22:21.544 [FCM] ZeusFcmService: USSD job enqueued
+  Details: Job ID: mtn_mini_statement_1758378136585
+14:22:21.635 [USSD] RunJobWorker: Starting USSD job
+  Details: Job ID: mtn_mini_statement_1758378136585
+14:22:21.637 [API] ZeusApi: Fetching job details
+  Details: Job ID: mtn_mini_statement_1758378136585
+14:22:22.047 [API] ZeusApi: Job details fetched
+  Details: Operator: MTN, SIM: 0, Code: *171#, Steps: [7, 4, 1, 2040], Seq: *171# > 7 > 4 > 1 > 2040
+14:22:22.050 [USSD] RunJobWorker: Job details received
+  Details: Sequence: *171# > 7 > 4 > 1 > 2040
+14:22:22.052 [USSD] RunJobWorker: Built USSD sequence
+  Details: Sequence: *171# > 7 > 4 > 1 > 2040
+14:22:22.054 [USSD] RunJobWorker: Using SIM slot
+  Details: Slot: 0
+14:22:28.038 [USSD] RunJobWorker: Step 1: ✅
+  Details: Input: *171# -> Response: USSD code running…...
+14:22:28.040 [USSD] RunJobWorker: Step 2: ✅
+  Details: Input: 7 -> Response: USSD code running…...
+14:22:28.042 [USSD] RunJobWorker: Step 3: ✅
+  Details: Input: 4 -> Response: USSD code running…...
+14:22:28.043 [USSD] RunJobWorker: Step 4: ✅
+  Details: Input: 1 -> Response: USSD code running…...
+14:22:28.045 [USSD] RunJobWorker: Step 5: ✅
+  Details: Input: 2040 -> Response: Cancel Send...
+14:22:28.047 [USSD] RunJobWorker: USSD execution completed
+  Details: Overall Success: true, Steps: 5, Final Response: Mini-Statement
+2025-09-20 TRANSFER GHS 1,246.50
+20...
+14:22:28.704 [API] ZeusApi: Job completed successfully
+  Details: Job ID: mtn_mini_statement_1758378136585
+14:22:29.318 [API] ZeusApi: USSD response sent successfully
+  Details: Job ID: mtn_mini_statement_1758378136585, Success: true
+14:22:29.321 [USSD] RunJobWorker: Job completed successfully
+  Details: Job ID: mtn_mini_statement_1758378136585
+14:23:39.830 [FCM] ZeusFcmService: FCM message received
+  Details: Data: {action=run, kind=ussd, jobId=mtn_send_money_1758378219960}
+14:23:39.832 [FCM] ZeusFcmService: USSD job enqueued
+  Details: Job ID: mtn_send_money_1758378219960
+14:23:39.914 [USSD] RunJobWorker: Starting USSD job
+  Details: Job ID: mtn_send_money_1758378219960
+14:23:39.915 [API] ZeusApi: Fetching job details
+  Details: Job ID: mtn_send_money_1758378219960
+14:23:41.085 [API] ZeusApi: Job details fetched
+  Details: Operator: MTN, SIM: 0, Code: *171#, Steps: [3, 1, 0549468390, 0549468390, 1, 2040], Seq: *171# > 3 > 1 > 0549468390 > 0549468390 > 1 > 2040
+14:23:41.088 [USSD] RunJobWorker: Job details received
+  Details: Sequence: *171# > 3 > 1 > 0549468390 > 0549468390 > 1 > 2040
+14:23:41.090 [USSD] RunJobWorker: Built USSD sequence
+  Details: Sequence: *171# > 3 > 1 > 0549468390 > 0549468390 > 1 > 2040
+14:23:41.092 [USSD] RunJobWorker: Using SIM slot
+  Details: Slot: 0
+14:23:47.873 [USSD] RunJobWorker: Step 1: ✅
+  Details: Input: *171# -> Response: USSD code running…...
+14:23:47.875 [USSD] RunJobWorker: Step 2: ✅
+  Details: Input: 3 -> Response: USSD code running…...
+14:23:47.876 [USSD] RunJobWorker: Step 3: ✅
+  Details: Input: 1 -> Response: USSD code running…...
+14:23:47.879 [USSD] RunJobWorker: Step 4: ✅
+  Details: Input: 0549468390 -> Response: USSD code running…...
+14:23:47.881 [USSD] RunJobWorker: Step 5: ✅
+  Details: Input: 0549468390 -> Response: Cancel Send...
+14:23:47.882 [USSD] RunJobWorker: Step 6: ✅
+  Details: Input: 1 -> Response: 1) Pay To
+2) Cash Out
+3) Cash In
+4) Pay Bill
+5) Airtime&Bundles
+6) Financial Services
+7) My Wallet C...
+14:23:47.884 [USSD] RunJobWorker: Step 7: ✅
+  Details: Input: 2040 -> Response: Cash In
+1) Mobile Money User
+2) Money Transfer
+0) Back Cancel Send...
+14:23:47.886 [USSD] RunJobWorker: USSD execution completed
+  Details: Overall Success: true, Steps: 7, Final Response: You are not allowed to perform this transaction. O...
+14:23:48.261 [API] ZeusApi: Job completed successfully
+  Details: Job ID: mtn_send_money_1758378219960
+14:23:48.838 [FCM] ZeusFcmService: FCM message received
+  Details: Data: {action=run, kind=ussd, jobId=agent_transfer_mtn_send_money_1758378219960_1758378229034}
+14:23:48.841 [FCM] ZeusFcmService: USSD job enqueued
+  Details: Job ID: agent_transfer_mtn_send_money_1758378219960_1758378229034
+14:23:48.943 [USSD] RunJobWorker: Starting USSD job
+  Details: Job ID: agent_transfer_mtn_send_money_1758378219960_1758378229034
+14:23:48.945 [API] ZeusApi: Fetching job details
+  Details: Job ID: agent_transfer_mtn_send_money_1758378219960_1758378229034
+14:23:49.369 [API] ZeusApi: Job details fetched
+  Details: Operator: MTN, SIM: 0, Code: *171#, Steps: [1, 1, 1, 1, 0549468390, REFERENCE], Seq: *171# > 1 > 1 > 1 > 1 > 0549468390 > REFERENCE
+14:23:49.371 [USSD] RunJobWorker: Job details received
+  Details: Sequence: *171# > 1 > 1 > 1 > 1 > 0549468390 > REFERENCE
+14:23:49.374 [USSD] RunJobWorker: Built USSD sequence
+  Details: Sequence: *171# > 1 > 1 > 1 > 1 > 0549468390 > REFERENCE
+14:23:49.376 [USSD] RunJobWorker: Using SIM slot
+  Details: Slot: 0
+14:23:49.545 [API] ZeusApi: USSD response sent successfully
+  Details: Job ID: mtn_send_money_1758378219960, Success: true
+14:23:49.546 [USSD] RunJobWorker: Job completed successfully
+  Details: Job ID: mtn_send_money_1758378219960
+14:23:56.151 [USSD] RunJobWorker: Step 1: ✅
+  Details: Input: *171# -> Response: USSD code running…...
+14:23:56.153 [USSD] RunJobWorker: Step 2: ✅
+  Details: Input: 1 -> Response: USSD code running…...
+14:23:56.155 [USSD] RunJobWorker: Step 3: ✅
+  Details: Input: 1 -> Response: Cancel Send...
+14:23:56.157 [USSD] RunJobWorker: Step 4: ✅
+  Details: Input: 1 -> Response: 1) Pay To
+2) Cash Out
+3) Cash In
+4) Pay Bill
+5) Airtime&Bundles
+6) Financial Services
+7) My Wallet C...
+14:23:56.160 [USSD] RunJobWorker: Step 5: ✅
+  Details: Input: 1 -> Response: Pay To
+1) Agent
+2) Merchant
+0) Back Cancel Send...
+14:23:56.162 [USSD] RunJobWorker: Step 6: ✅
+  Details: Input: 0549468390 -> Response: Enter mobile number Cancel Send...
+14:23:56.164 [USSD] RunJobWorker: Step 7: ✅
+  Details: Input: REFERENCE -> Response: Invalid Mobile Number, Please try again. Cancel Send...
+14:23:56.166 [USSD] RunJobWorker: USSD execution completed
+  Details: Overall Success: true, Steps: 7, Final Response: Invalid Mobile Number, Please try again. Cancel Se...
+14:23:56.590 [API] ZeusApi: Job completed successfully
+  Details: Job ID: agent_transfer_mtn_send_money_1758378219960_1758378229034
+14:23:57.291 [API] ZeusApi: USSD response sent successfully
+  Details: Job ID: agent_transfer_mtn_send_money_1758378219960_1758378229034, Success: true
+14:23:57.293 [USSD] RunJobWorker: Job completed successfully
+  Details: Job ID: agent_transfer_mtn_send_money_1758378219960_1758378229034
+14:25:08.574 [INFO] UssdLogsFragment: USSD logs fragment created
