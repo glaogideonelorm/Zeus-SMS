@@ -100,3 +100,9 @@ secrets.xml
 
 # Reports
 build/reports/
+.vscode/
+*.xapk
+*.apk
+*.zip
+SimpleUssdApp copy/
+_analysis/
