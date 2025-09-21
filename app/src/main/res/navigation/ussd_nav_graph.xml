@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/ussd_nav_graph"
+    app:startDestination="@id/nav_ussd_home">
+
+    <fragment
+        android:id="@+id/nav_ussd_home"
+        android:name="com.example.smshook.fragments.UssdHomeFragment"
+        android:label="USSD Home" />
+
+    <fragment
+        android:id="@+id/nav_ussd_logs"
+        android:name="com.example.smshook.fragments.UssdLogsFragment"
+        android:label="USSD Logs" />
+
+</navigation>
+
+
+
+
+
+
+

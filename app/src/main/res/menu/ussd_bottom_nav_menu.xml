@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_ussd_home"
+        android:icon="@drawable/ic_home"
+        android:title="USSD Home" />
+    <item
+        android:id="@+id/nav_ussd_logs"
+        android:icon="@drawable/ic_logs"
+        android:title="USSD Logs" />
+</menu>
+
+
+
+
+
+
+
