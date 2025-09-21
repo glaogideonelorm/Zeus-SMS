@@ -5,6 +5,7 @@ A comprehensive Android application that provides SMS forwarding and USSD automa
 ## Features
 
 ### SMS Management
+
 - **Dual-SIM Support**: Captures SMS from both SIM cards simultaneously
 - **Real-time Forwarding**: Instant webhook delivery to configured endpoints
 - **Multiple Webhook Support**: Configure and manage multiple webhook endpoints
@@ -13,6 +14,7 @@ A comprehensive Android application that provides SMS forwarding and USSD automa
 - **Battery Optimized**: Efficient background processing with WorkManager
 
 ### USSD Automation
+
 - **Automated USSD Execution**: Execute USSD codes automatically via accessibility service
 - **Dual-SIM USSD Support**: Run USSD commands on both SIM slots
 - **Cloud Integration**: Receive USSD commands from Zeus Cloud via WebSocket
@@ -21,6 +23,7 @@ A comprehensive Android application that provides SMS forwarding and USSD automa
 - **Command History**: Track and log all USSD command executions
 
 ### Cloud Integration
+
 - **Zeus Cloud Connection**: Real-time WebSocket connection for command delivery
 - **Firebase Cloud Messaging**: Push notification support for remote commands
 - **JWT Authentication**: Secure token-based authentication with cloud services
@@ -29,6 +32,7 @@ A comprehensive Android application that provides SMS forwarding and USSD automa
 - **Token Management**: Dynamic token refresh and validation
 
 ### User Interface
+
 - **Modern Navigation**: Bottom navigation with Home, Configuration, and Logs
 - **Entry Activity**: Unified entry point for SMS and USSD functionalities
 - **Configuration Management**: Easy setup of webhook URLs and server endpoints
@@ -39,12 +43,14 @@ A comprehensive Android application that provides SMS forwarding and USSD automa
 ## Setup Instructions
 
 ### Prerequisites
+
 - Android device with API 24+ (Android 7.0)
 - Internet connection for webhook delivery and cloud integration
 - SMS and Phone permissions
 - Accessibility Service access (for USSD automation)
 
 ### Installation
+
 ```bash
 # Build and install
 ./gradlew assembleDebug
@@ -52,6 +58,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
 ### SMS Configuration
+
 1. Open Zeus SMS app
 2. Go to **Configuration** tab
 3. Enter your webhook URL
@@ -61,6 +68,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 7. Test with **Test Webhook** button
 
 ### USSD Setup
+
 1. Navigate to **Zeus USSD** from the home screen
 2. Enable Accessibility Service:
    - Go to Settings > Accessibility
@@ -70,6 +78,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 4. Test USSD execution with predefined commands
 
 ### Grant Permissions
+
 - **SMS**: Allow SMS permissions for message capture
 - **Phone State**: Allow Phone State permissions for dual-SIM support
 - **Phone Calls**: Allow for USSD code execution
@@ -77,6 +86,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - **Internet**: Required for webhook delivery and cloud integration
 
 ### Monitor Activity
+
 - **SMS Logs**: View real-time SMS forwarding status and retry failed messages
 - **USSD Logs**: Monitor USSD command execution history and results
 - **Connection Status**: Check cloud connectivity and service status
@@ -84,6 +94,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ## Data Formats
 
 ### SMS Webhook Format
+
 Messages are sent as POST requests:
 
 ```json
@@ -101,6 +112,7 @@ Messages are sent as POST requests:
 ```
 
 ### USSD Command Format (Zeus Cloud)
+
 Commands received from Zeus Cloud:
 
 ```json
@@ -118,6 +130,7 @@ Commands received from Zeus Cloud:
 ```
 
 ### USSD Response Format
+
 Results sent back to Zeus Cloud:
 
 ```json
@@ -138,12 +151,14 @@ Results sent back to Zeus Cloud:
 ## Development
 
 ### Requirements
+
 - Android Studio Arctic Fox+
 - Android SDK API 34
 - Kotlin 1.9.20+
 - Java 8+ for USSD modules
 
 ### Build
+
 ```bash
 git clone [repository-url]
 cd Zeus-SMS
@@ -151,6 +166,7 @@ cd Zeus-SMS
 ```
 
 ### Project Structure
+
 ```
 Zeus-SMS/
 ├── app/                                    # Main application module
@@ -176,16 +192,19 @@ Zeus-SMS/
 ### Key Components
 
 #### SMS Management
+
 - **SmsReceiver**: Captures incoming SMS messages
 - **ForwardWorker**: Handles webhook delivery with retry logic
 - **ConfigurationFragment**: Manages webhook URLs and settings
 
 #### USSD Automation
+
 - **UssdController**: Manages USSD code execution
 - **UssdAccessibilityService**: Handles USSD dialog automation
 - **ZeusUssdActivity**: Main USSD interface with navigation
 
 #### Cloud Integration
+
 - **ZeusApi**: REST API client for cloud communication
 - **RealtimeService**: WebSocket connection to Zeus Cloud
 - **ZeusFcmService**: Firebase Cloud Messaging integration
@@ -194,7 +213,9 @@ Zeus-SMS/
 ## Troubleshooting
 
 ### SMS Issues
+
 **SMS not forwarding?**
+
 - Check SMS permissions are granted
 - Verify webhook URL is accessible
 - Use Test Webhook to verify connection
@@ -202,13 +223,16 @@ Zeus-SMS/
 - Review Activity Log for specific error messages
 
 **App not receiving SMS?**
+
 - Disable battery optimization for the app
 - Check dual-SIM settings if applicable
 - Ensure SMS permissions are properly granted
 - Verify the app is set as default SMS handler (if required)
 
 ### USSD Issues
+
 **USSD commands not executing?**
+
 - Enable Accessibility Service in Settings > Accessibility
 - Grant Phone and Phone State permissions
 - Check if USSD codes are valid for your carrier
@@ -216,13 +240,16 @@ Zeus-SMS/
 - Review USSD logs for execution details
 
 **Accessibility Service not working?**
+
 - Go to Settings > Accessibility
 - Find "Zeus USSD" or "Simple USSD" service
 - Enable the service and grant all permissions
 - Restart the app after enabling the service
 
 ### Cloud Connection Issues
+
 **Zeus Cloud not connecting?**
+
 - Check internet connectivity
 - Verify server URLs in configuration
 - Ensure Zeus Cloud server is deployed and running
@@ -230,19 +257,23 @@ Zeus-SMS/
 - Review connection status in the app
 
 **WebSocket connection failing?**
+
 - Verify WebSocket URL format (wss:// or ws://)
 - Check firewall and proxy settings
 - Ensure server supports WebSocket connections
 - Review realtime service logs
 
 ### General Issues
+
 **App crashes or behaves unexpectedly?**
+
 - Clear app data and reconfigure
 - Check device compatibility (Android 7.0+)
 - Review crash logs in the Activity Log
 - Ensure all required permissions are granted
 
 **Performance issues?**
+
 - Disable battery optimization for the app
 - Check available storage space
 - Close other resource-intensive apps
