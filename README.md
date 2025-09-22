@@ -52,6 +52,7 @@ A comprehensive Android application that provides SMS forwarding and USSD automa
 ### Installation
 
 #### Option 1: Pre-built APK (Recommended)
+
 ```bash
 # Download and install the pre-built APK
 cd releases
@@ -59,6 +60,7 @@ cd releases
 ```
 
 #### Option 2: Build from Source
+
 ```bash
 # Build and install
 ./gradlew assembleDebug
@@ -66,6 +68,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
 #### Option 3: Direct Device Installation
+
 1. Download `releases/zeus-sms-v1.0-debug.apk` to your device
 2. Enable "Install from Unknown Sources" in device settings
 3. Open the APK file and install
