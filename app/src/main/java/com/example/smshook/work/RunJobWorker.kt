@@ -21,14 +21,24 @@ class RunJobWorker(
     }
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        val jobId = inputData.getString("jobId") ?: return@withContext Result.failure()
+        
         try {
-            val jobId = inputData.getString("jobId") ?: return@withContext Result.failure()
-            
             Log.d(TAG, "Starting USSD job: $jobId")
             LogManager.addLog(LogLevel.USSD, TAG, "Starting USSD job", "Job ID: $jobId")
             
-            // 1) Pull full job details from server
-            val job = ZeusApi.getJob(applicationContext, jobId)
+            // 1) Pull full job details from server with timeout handling
+            val job = try {
+                ZeusApi.getJob(applicationContext, jobId)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to fetch job details: ${e.message}", e)
+                LogManager.addLog(LogLevel.ERROR, TAG, "Failed to fetch job details", "Error: ${e.message}, Type: ${e.javaClass.simpleName}")
+                
+                // Send error response back to server
+                sendJobFailureResponse(jobId, "Failed to fetch job details: ${e.message}", e.javaClass.simpleName)
+                return@withContext Result.failure()
+            }
+            
             Log.d(TAG, "Job details: ${job.seq}")
             LogManager.addLog(LogLevel.USSD, TAG, "Job details received", "Sequence: ${job.seq}")
             
@@ -40,7 +50,13 @@ class RunJobWorker(
                     val steps = job.steps.joinToString(" > ")
                     "${job.code} > $steps"
                 }
-                else -> throw IllegalArgumentException("Missing USSD sequence: code/steps or seq required")
+                else -> {
+                    val error = "Missing USSD sequence: code/steps or seq required"
+                    Log.e(TAG, error)
+                    LogManager.addLog(LogLevel.ERROR, TAG, "Invalid job configuration", error)
+                    sendJobFailureResponse(jobId, error, "IllegalArgumentException")
+                    return@withContext Result.failure()
+                }
             }
 
             Log.d(TAG, "Built sequence: $sequence")
@@ -76,8 +92,50 @@ class RunJobWorker(
             
         } catch (e: Exception) {
             Log.e(TAG, "Job failed: ${e.message}", e)
-            LogManager.addLog(LogLevel.ERROR, TAG, "Job failed", e.message)
+            LogManager.addLog(LogLevel.ERROR, TAG, "Job failed", "Error: ${e.message}, Type: ${e.javaClass.simpleName}")
+            
+            // Send error response back to server
+            sendJobFailureResponse(jobId, e.message ?: "Unknown error", e.javaClass.simpleName)
+            
             Result.failure()
+        }
+    }
+    
+    /**
+     * Send failure response back to server when job cannot be completed
+     */
+    private suspend fun sendJobFailureResponse(jobId: String, errorMessage: String, errorType: String) {
+        try {
+            Log.d(TAG, "Sending job failure response for job: $jobId")
+            LogManager.addLog(LogLevel.API, TAG, "Sending job failure response", "Job ID: $jobId, Error: $errorMessage")
+            
+            // Create a failure outcome
+            val failureOutcome = mapOf(
+                "jobId" to jobId,
+                "success" to false,
+                "error" to errorMessage,
+                "errorType" to errorType,
+                "timestamp" to System.currentTimeMillis()
+            )
+            
+            // Send failure response to server
+            ZeusApi.completeJob(applicationContext, jobId, failureOutcome)
+            
+            // Also send as USSD response for consistency
+            ZeusApi.sendUssdResponse(
+                context = applicationContext,
+                jobId = jobId,
+                finalResponse = "Job failed: $errorMessage",
+                success = false,
+                steps = emptyList()
+            )
+            
+            Log.d(TAG, "Job failure response sent successfully: $jobId")
+            LogManager.addLog(LogLevel.API, TAG, "Job failure response sent successfully", "Job ID: $jobId")
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send job failure response: ${e.message}", e)
+            LogManager.addLog(LogLevel.ERROR, TAG, "Failed to send job failure response", "Error: ${e.message}")
         }
     }
 }

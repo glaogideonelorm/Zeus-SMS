@@ -18,7 +18,7 @@ object ZeusApi {
     private val gson = Gson()
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-        .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS) // Increased from 30 to 60 seconds
         .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
         .build()
     
@@ -60,16 +60,39 @@ object ZeusApi {
     }
 
     fun getJob(context: Context, jobId: String): Job {
-        LogManager.addLog(LogLevel.API, TAG, "Fetching job details", "Job ID: $jobId")
-        val response = get(context, "${getBaseUrl(context)}/jobs/$jobId")
-        val job = gson.fromJson(response, Job::class.java)
-        LogManager.addLog(
-            LogLevel.API,
-            TAG,
-            "Job details fetched",
-            "Operator: ${job.operator}, SIM: ${job.simSlot}, Code: ${job.code}, Steps: ${job.steps}, Seq: ${job.seq}"
-        )
-        return job
+        return getJobWithRetry(context, jobId, maxRetries = 2)
+    }
+    
+    private fun getJobWithRetry(context: Context, jobId: String, maxRetries: Int): Job {
+        var lastException: Exception? = null
+        
+        repeat(maxRetries + 1) { attempt ->
+            try {
+                LogManager.addLog(LogLevel.API, TAG, "Fetching job details (attempt ${attempt + 1})", "Job ID: $jobId")
+                val response = get(context, "${getBaseUrl(context)}/jobs/$jobId")
+                val job = gson.fromJson(response, Job::class.java)
+                LogManager.addLog(
+                    LogLevel.API,
+                    TAG,
+                    "Job details fetched successfully",
+                    "Operator: ${job.operator}, SIM: ${job.simSlot}, Code: ${job.code}, Steps: ${job.steps}, Seq: ${job.seq}"
+                )
+                return job
+            } catch (e: Exception) {
+                lastException = e
+                Log.e(TAG, "Attempt ${attempt + 1} failed to fetch job details: ${e.message}", e)
+                
+                if (attempt < maxRetries) {
+                    LogManager.addLog(LogLevel.API, TAG, "Retrying job fetch", "Attempt ${attempt + 1} failed, retrying...")
+                    // Wait before retry (exponential backoff)
+                    Thread.sleep(1000L * (attempt + 1))
+                }
+            }
+        }
+        
+        // If all retries failed, throw the last exception
+        LogManager.addLog(LogLevel.ERROR, TAG, "All attempts failed to fetch job details", "Job ID: $jobId, Error: ${lastException?.message}")
+        throw lastException ?: Exception("Failed to fetch job details after $maxRetries retries")
     }
 
 
